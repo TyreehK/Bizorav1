@@ -1,47 +1,38 @@
-// src/lib/supabase/clients.ts
-"use client";
+// src/lib/supabase/client.ts
+// Eén schone implementatie zonder duplicaten.
 
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-/**
- * Vereiste env variabelen:
- *
- *  Client-side (exposed):
- *    - NEXT_PUBLIC_SUPABASE_URL
- *    - NEXT_PUBLIC_SUPABASE_ANON_KEY
- *
- *  Server-side (NOOIT naar client gelekt):
- *    - SUPABASE_SERVICE_ROLE_KEY
- *
- *  Optioneel:
- *    - NEXT_PUBLIC_APP_URL (handig voor redirects)
- */
-
+/** Publieke env (browser & server) */
 const PUBLIC_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const PUBLIC_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+/** Server-only env (NOOIT client-side gebruiken) */
+const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
 /**
- * Browser client — gebruikt anon key (RLS enforced)
- * Gebruik in client components, of in server components die client features hydrateren.
+ * Browser client:
+ * - gebruikt de public anon key
+ * - persistSession + autoRefresh aan
  */
 export function createBrowserClient(): SupabaseClient {
   if (!PUBLIC_URL || !PUBLIC_ANON) {
     throw new Error(
       "[Supabase] NEXT_PUBLIC_SUPABASE_URL of NEXT_PUBLIC_SUPABASE_ANON_KEY ontbreekt. " +
-      "Controleer je .env en Vercel Project Settings."
+      "Controleer je .env(.local) en Vercel Project Settings."
     );
   }
   return createClient(PUBLIC_URL, PUBLIC_ANON, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true
-    }
+      detectSessionInUrl: true,
+    },
   });
 }
 
 /**
- * Server admin client — gebruikt SERVICE ROLE key (bypasst RLS)
+ * Server admin client — gebruikt SERVICE ROLE key (bypasst RLS).
  * Gebruik ALLEEN in server-context (API routes, server actions, webhooks).
  * Nooit importeren in client components!
  */
@@ -49,29 +40,36 @@ export function createServerAdminClient(): SupabaseClient {
   if (typeof window !== "undefined") {
     throw new Error("[Supabase] createServerAdminClient() mag alleen server-side gebruikt worden.");
   }
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = PUBLIC_URL || process.env.SUPABASE_URL;
+  const serviceKey = SERVICE_ROLE;
   if (!url || !serviceKey) {
     throw new Error(
       "[Supabase] SUPABASE_SERVICE_ROLE_KEY of SUPABASE_URL ontbreekt. " +
-      "Zorg dat deze alleen als SERVER env variabelen zijn ingesteld."
+      "Zorg dat dit server-only env vars zijn (geen NEXT_PUBLIC_)."
     );
   }
   return createClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 }
 
 /**
- * Haal tenant (subdomein) uit de Host header.
+ * (Optioneel) Tenant subdomein uit Host header halen.
  * - production: tenant.domein.nl → "tenant"
- * - localhost: gebruik pad-based routing (we bouwen elders een fallback)
+ * - localhost: returnt null (we kunnen elders pad-based fallback doen)
  */
 export function getTenantFromRequest(req: Request): string | null {
   const host = req.headers.get("host") ?? "";
   const hostname = host.split(":")[0];
-  // Pas deze lijst aan je eigen domeinen aan:
-  const marketing = new Set(["localhost", "127.0.0.1", "bizora.vercel.app", "bizora.nl", "www.bizora.nl"]);
+
+  // Pas deze lijst aan je eigen (apex/marketing) domeinen aan:
+  const marketing = new Set([
+    "localhost",
+    "127.0.0.1",
+    "bizora.vercel.app",
+    "bizora.nl",
+    "www.bizora.nl",
+  ]);
 
   if (!hostname || marketing.has(hostname)) return null;
 
@@ -80,8 +78,8 @@ export function getTenantFromRequest(req: Request): string | null {
     // bv. tenant.bizora.nl
     return parts[0].toLowerCase();
   }
-  // 2-delig domein dat niet in marketing-lijst staat kan ook tenant zijn (bv. tenant.local)
   if (parts.length === 2 && !marketing.has(hostname)) {
+    // bv. tenant.local
     return parts[0].toLowerCase();
   }
   return null;
