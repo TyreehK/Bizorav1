@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-// Relative import i.p.v. "@/..." zodat het altijd werkt zonder alias-config
-import { createBrowserClient } from "../../../lib/supabase/clients";
+// FIX: gebruik relatieve import naar client.ts
+import { createBrowserClient } from "../../../lib/supabase/client";
 
 type Invoice = {
   id: string;
@@ -71,7 +71,6 @@ export default function DashboardPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Init: bepaal organization via memberships en laad datasets
   useEffect(() => {
     (async () => {
       try {
@@ -90,7 +89,6 @@ export default function DashboardPage() {
 
         setOrgId(mem.organization_id);
 
-        // Invoices (optioneel)
         let fetchedInvoices: Invoice[] = [];
         try {
           const { data } = await supabase
@@ -102,12 +100,9 @@ export default function DashboardPage() {
             .order("issued_at", { ascending: false })
             .limit(500);
           fetchedInvoices = (data ?? []) as Invoice[];
-        } catch {
-          // tabel bestaat nog niet → laat leeg
-        }
+        } catch {}
         setInvoices(fetchedInvoices);
 
-        // Quotes (optioneel)
         let fetchedQuotes: Quote[] = [];
         try {
           const { data } = await supabase
@@ -120,7 +115,6 @@ export default function DashboardPage() {
         } catch {}
         setQuotes(fetchedQuotes);
 
-        // Activity feed (optioneel)
         let fetchedFeed: Activity[] = [];
         try {
           const { data } = await supabase
@@ -140,29 +134,17 @@ export default function DashboardPage() {
     })();
   }, []);
 
-  // KPI-berekeningen
   const kpis = useMemo(() => {
-    // Omzet (betaald)
-    const paid = invoices.filter(
-      (i) =>
-        i.status === "betaald" ||
-        (i.paid_amount ?? 0) >= (i.total_incl ?? Number.POSITIVE_INFINITY)
-          ? (i.total_incl ?? 0) // als beide bekend, vergelijk echt
-          : 0
-    );
-    // bovenstaand is een safeguard; echte check:
     const paid2 = invoices.filter(
       (i) => i.status === "betaald" || (i.paid_amount ?? 0) >= (i.total_incl ?? 0)
     );
     const omzet = sum(paid2.map((i) => i.total_incl ?? 0));
 
-    // Openstaand (totaal - betaald, voor niet-betaald/gecrediteerd)
     const open = invoices
       .filter((i) => i.status !== "betaald" && i.status !== "gecrediteerd")
       .map((i) => (i.total_incl ?? 0) - (i.paid_amount ?? 0));
     const openstaand = sum(open);
 
-    // Binnengekomen betalingen (afgelopen 30 dagen)
     const now = Date.now();
     const d30 = now - 30 * 24 * 60 * 60 * 1000;
     const recentPaidEst = invoices
@@ -176,10 +158,8 @@ export default function DashboardPage() {
       .map((i) => i.total_incl ?? 0);
     const binnengekomen = sum(recentPaidEst);
 
-    // BTW-saldo (placeholder)
     const btwSaldo = sum(invoices.map((i) => i.total_tax ?? 0)) - 0;
 
-    // Offertes in afwachting
     const offertesInAfwachting = quotes.filter(
       (q) => q.status === "verzonden" || q.status === "bekeken"
     ).length;
@@ -238,7 +218,6 @@ export default function DashboardPage() {
 
       {!loading && !error && (
         <>
-          {/* KPI's */}
           <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <KPI
               title="Omzet (betaald)"
@@ -262,7 +241,6 @@ export default function DashboardPage() {
             />
           </section>
 
-          {/* Quick tasks */}
           <section className="mt-8 grid gap-4 lg:grid-cols-3">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <h2 className="font-semibold mb-2">Begin hier</h2>
@@ -285,7 +263,6 @@ export default function DashboardPage() {
               </ul>
             </div>
 
-            {/* Offertes in afwachting */}
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <h2 className="font-semibold mb-2">Offertes in afwachting</h2>
               {kpis.offertesInAfwachting === 0 ? (
@@ -304,7 +281,6 @@ export default function DashboardPage() {
               </a>
             </div>
 
-            {/* BTW overzicht teaser */}
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <h2 className="font-semibold mb-2">BTW-overzicht</h2>
               <p className="text-sm opacity-80">
@@ -320,7 +296,6 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Activiteitenfeed */}
           <section className="mt-8">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <h2 className="font-semibold mb-4">Activiteiten</h2>
@@ -358,8 +333,6 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-/* ------------------------------- UI -------------------------------- */
 
 function KPI({
   title,

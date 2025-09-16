@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createServerAdminClient } from "@/lib/supabase/clients";
+// FIX: relatieve import naar client.ts (server admin client)
+import { createServerAdminClient } from "../../../../lib/supabase/client";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,6 @@ function mapStripeSubStatus(s: Stripe.Subscription.Status): AppSubStatus {
   }
 }
 
-// Seat limits per plan (enterprise = null = onbeperkt)
 function seatLimitForPlan(plan: string): number | null {
   const p = plan.toLowerCase();
   if (p === "start") return 1;
@@ -31,9 +31,6 @@ function seatLimitForPlan(plan: string): number | null {
   return 1;
 }
 
-/**
- * Upsert subscriptions row for an org with as much Stripe metadata as possible.
- */
 async function upsertSubscriptionForOrg(supabase: any, orgId: string, sub: Stripe.Subscription, planFallback?: string) {
   const status = mapStripeSubStatus(sub.status);
   const trial_end = sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null;
@@ -42,8 +39,6 @@ async function upsertSubscriptionForOrg(supabase: any, orgId: string, sub: Strip
   const cancel_at = sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : null;
   const canceled_at = sub.canceled_at ? new Date(sub.canceled_at * 1000).toISOString() : null;
 
-  // Bepaal plan-naam (op basis van prijs-id → metadata/lookup; hier nemen we planFallback indien beschikbaar)
-  // Je kunt later price → plan map server-side injecteren.
   const plan = planFallback ?? "start";
 
   const { error } = await supabase
@@ -85,19 +80,16 @@ export async function POST(req: NextRequest) {
 
   try {
     switch (event.type) {
-      /* -------------------- CHECKOUT COMPLETED -------------------- */
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const registrationId = session.metadata?.registration_id;
         const plan = (session.metadata?.plan || "start").toLowerCase();
 
-        // Haal de Subscription op voor tijden/status
         let subscription: Stripe.Subscription | null = null;
         if (session.subscription) {
           subscription = await stripe.subscriptions.retrieve(session.subscription as string);
         }
 
-        // 1) Update registratie
         if (registrationId) {
           await supabase
             .from("registrations")
@@ -109,7 +101,6 @@ export async function POST(req: NextRequest) {
             .eq("id", registrationId);
         }
 
-        // 2) Haal registratie-payload (company + email)
         const { data: reg } = registrationId
           ? await supabase.from("registrations").select("email, plan, payload").eq("id", registrationId).single()
           : { data: null as any };
@@ -117,12 +108,11 @@ export async function POST(req: NextRequest) {
         const email = (reg?.email ?? session.customer_details?.email ?? "").toLowerCase();
         const companyName = reg?.payload?.company?.companyName || "Nieuw bedrijf";
 
-        // 3) Maak Organization (status trialing)
         const { data: org, error: orgErr } = await supabase
           .from("organizations")
           .insert({
             name: companyName,
-            subdomain: null, // wordt gekozen tijdens wizard
+            subdomain: null,
             plan,
             status: "trialing",
             trial_end: subscription?.trial_end ? new Date(subscription.trial_end * 1000) : null,
@@ -133,7 +123,7 @@ export async function POST(req: NextRequest) {
             currency: "EUR",
             locale: "nl-NL",
             bookyear_start: reg?.payload?.preferences?.fiscalYearStartMonth ?? 1,
-            accounting_basis: (reg?.payload?.preferences?.accountingBasis ?? "accrual")
+            accounting_basis: reg?.payload?.preferences?.accountingBasis ?? "accrual"
           })
           .select("id")
           .single();
@@ -145,9 +135,7 @@ export async function POST(req: NextRequest) {
 
         const orgId = org.id as string;
 
-        // 4) Profiel: re-use op e-mail, anders nieuw
         let profileId: string | null = null;
-
         if (email) {
           const { data: existing } = await supabase
             .from("profiles")
@@ -175,7 +163,6 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // 5) Membership: admin
         if (profileId) {
           const { error: memErr } = await supabase.from("memberships").insert({
             organization_id: orgId,
@@ -186,11 +173,9 @@ export async function POST(req: NextRequest) {
           if (memErr) console.error("MEMBERSHIP_CREATE_ERROR", memErr);
         }
 
-        // 6) Subscriptions upsert
         if (subscription) {
           await upsertSubscriptionForOrg(supabase, orgId, subscription, plan);
         } else if (session.subscription) {
-          // fallback: haal alsnog op
           const sub = await stripe.subscriptions.retrieve(session.subscription as string);
           await upsertSubscriptionForOrg(supabase, orgId, sub, plan);
         }
@@ -198,31 +183,22 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      /* --------------- TRIAL WILL END (notificaties) --------------- */
       case "customer.subscription.trial_will_end": {
         const sub = event.data.object as Stripe.Subscription;
-
-        // Vind org via subscriptions tabel (stripe_subscription_id uniek)
         const { data: orgSub } = await supabase
           .from("subscriptions")
           .select("org_id")
           .eq("stripe_subscription_id", sub.id)
           .maybeSingle();
-
         if (orgSub?.org_id) {
           await upsertSubscriptionForOrg(supabase, orgSub.org_id, sub);
         }
-
-        // (Optioneel) Maak een in-app notificatie/taak aan hier.
-
         break;
       }
 
-      /* -------------------- SUBSCRIPTION UPDATED -------------------- */
       case "customer.subscription.updated": {
         const sub = event.data.object as Stripe.Subscription;
 
-        // Bepaal org_id: als we ‘m niet vinden in subscriptions, lookup via organizations
         let orgId: string | null = null;
         {
           const { data: found } = await supabase
@@ -243,8 +219,6 @@ export async function POST(req: NextRequest) {
 
         if (orgId) {
           await upsertSubscriptionForOrg(supabase, orgId, sub);
-
-          // Zet organization.status op 'active' zodra subscription actief is
           if (sub.status === "active") {
             await supabase.from("organizations").update({ status: "active" }).eq("id", orgId);
           }
@@ -253,7 +227,6 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      /* -------------------- SUBSCRIPTION DELETED -------------------- */
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
 
@@ -265,14 +238,11 @@ export async function POST(req: NextRequest) {
 
         if (found?.org_id) {
           await upsertSubscriptionForOrg(supabase, found.org_id, sub);
-
-          // App-gating: organization op 'suspended' (read-only UI)
           await supabase.from("organizations").update({ status: "suspended" }).eq("id", found.org_id);
         }
         break;
       }
 
-      /* ------------------- INVOICE PAYMENT SUCCEEDED ------------------- */
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
         if (invoice.subscription) {
@@ -286,15 +256,12 @@ export async function POST(req: NextRequest) {
 
           if (found?.org_id) {
             await upsertSubscriptionForOrg(supabase, found.org_id, sub);
-
-            // Active org na succesvolle betaling
             await supabase.from("organizations").update({ status: "active" }).eq("id", found.org_id);
           }
         }
         break;
       }
 
-      /* --------------------- INVOICE PAYMENT FAILED --------------------- */
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
         if (invoice.subscription) {
@@ -308,21 +275,18 @@ export async function POST(req: NextRequest) {
 
           if (found?.org_id) {
             await upsertSubscriptionForOrg(supabase, found.org_id, sub);
-            // organization.status laten staan; UI gebruikt subscriptions.status = past_due voor read-only gating prompts
           }
         }
         break;
       }
 
       default:
-        // Onbekend of onbelangrijk event: acknowledge
-        // console.log(`Unhandled event type: ${event.type}`);
         break;
     }
 
     return NextResponse.json({ received: true });
   } catch (err: any) {
-    console.error("WEBHOOK_HANDLER_ERROR", event?.type, err?.message, err);
+    console.error("WEBHOOK_HANDLER_ERROR", (err && err.message) || err);
     return NextResponse.json({ error: "handler_error" }, { status: 500 });
   }
 }

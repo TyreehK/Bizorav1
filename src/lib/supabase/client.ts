@@ -84,3 +84,5 @@ export function getTenantFromRequest(req: Request): string | null {
   }
   return null;
 }
+// Eenvoudige barrel zodat zowel '.../client' als '.../clients' werkt
+export * from "./client";

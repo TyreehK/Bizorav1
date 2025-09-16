@@ -4,24 +4,42 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { createBrowserClient } from "@/lib/supabase/clients";
+// FIX: relatieve import naar client.ts (geen alias nodig)
+import { createBrowserClient } from "../../../lib/supabase/client";
 
-// UI placeholders: pas aan naar je eigen componenten
 function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={"w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 outline-none " + (props.className||"")} />;
+  return (
+    <input
+      {...props}
+      className={
+        "w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 outline-none " +
+        (props.className || "")
+      }
+    />
+  );
 }
 function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return <button {...props} className={"rounded-xl px-4 py-2 border border-white/20 bg-white/10 hover:bg-white/20 " + (props.className||"")} />;
-}
-function Progress({ value, className }:{ value:number; className?:string }) {
   return (
-    <div className={"w-full h-2 rounded bg-white/10 " + (className||"")}>
-      <div className="h-2 rounded bg-white/60" style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
+    <button
+      {...props}
+      className={
+        "rounded-xl px-4 py-2 border border-white/20 bg-white/10 hover:bg-white/20 " +
+        (props.className || "")
+      }
+    />
+  );
+}
+function Progress({ value, className }: { value: number; className?: string }) {
+  return (
+    <div className={"w-full h-2 rounded bg-white/10 " + (className || "")}>
+      <div
+        className="h-2 rounded bg-white/60"
+        style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+      />
     </div>
   );
 }
 
-// --- Klein debounce util, vervangt lodash.debounce ---
 function debounce<F extends (...args: any[]) => void>(fn: F, wait: number) {
   let t: any;
   return (...args: Parameters<F>) => {
@@ -30,7 +48,6 @@ function debounce<F extends (...args: any[]) => void>(fn: F, wait: number) {
   };
 }
 
-// --- Schema ---
 const WizardSchema = z.object({
   subdomain: z.string().min(3).max(32),
   companyType: z.enum(["zzp", "kleinbedrijf", "mkb", "anders"]).default("zzp"),
@@ -41,17 +58,19 @@ const WizardSchema = z.object({
   logoUrl: z.string().url().optional().nullable(),
   accentColor: z.string().optional().nullable(),
   vatId: z.string().optional().nullable(),
-  vatRates: z.array(z.number()).default([21, 9, 0])
+  vatRates: z.array(z.number()).default([21, 9, 0]),
 });
 type WizardData = z.infer<typeof WizardSchema>;
 
-// Supabase browser client
 const supabase = createBrowserClient();
 
 export default function SetupWizardPage() {
   const [step, setStep] = useState(1);
   const [orgId, setOrgId] = useState<string | null>(null);
-  const [availability, setAvailability] = useState<null | { available: boolean; reason?: string }>(null);
+  const [availability, setAvailability] = useState<null | {
+    available: boolean;
+    reason?: string;
+  }>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -64,11 +83,10 @@ export default function SetupWizardPage() {
       fiscalYearStartMonth: 1,
       language: "nl",
       currency: "EUR",
-      vatRates: [21, 9, 0]
-    }
+      vatRates: [21, 9, 0],
+    },
   });
 
-  // Bepaal orgId via memberships (eerste org van user)
   useEffect(() => {
     (async () => {
       setErr(null);
@@ -82,11 +100,15 @@ export default function SetupWizardPage() {
     })();
   }, []);
 
-  // Debounced beschikbaarheidscheck
   const checkAvailability = debounce(async (candidate: string) => {
-    if (!candidate) { setAvailability(null); return; }
+    if (!candidate) {
+      setAvailability(null);
+      return;
+    }
     try {
-      const res = await fetch(`/api/org/subdomain?candidate=${encodeURIComponent(candidate)}`);
+      const res = await fetch(
+        `/api/org/subdomain?candidate=${encodeURIComponent(candidate)}`
+      );
       const json = await res.json();
       setAvailability({ available: !!json.available, reason: json.reason || null });
     } catch {
@@ -107,7 +129,7 @@ export default function SetupWizardPage() {
       const res = await fetch("/api/org/subdomain", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orgId, subdomain: desired })
+        body: JSON.stringify({ orgId, subdomain: desired }),
       });
       const json = await res.json();
       if (!json.ok) {
@@ -138,7 +160,11 @@ export default function SetupWizardPage() {
         <div>
           <h2 className="text-xl font-semibold mb-2">Stap 1: Kies je subdomein</h2>
           <p className="text-sm mb-2">
-            Dit wordt je URL: <span className="font-mono">https://<strong>{form.watch("subdomain") || "jouwbedrijf"}</strong>.bizora.nl</span>
+            Dit wordt je URL:{" "}
+            <span className="font-mono">
+              https://<strong>{form.watch("subdomain") || "jouwbedrijf"}</strong>
+              .bizora.nl
+            </span>
           </p>
           <Input
             placeholder="jouwbedrijf"
@@ -150,8 +176,14 @@ export default function SetupWizardPage() {
             }}
           />
           {availability && (
-            <p className={`mt-1 text-sm ${availability.available ? "text-green-400" : "text-red-300"}`}>
-              {availability.available ? "Beschikbaar ✅" : `Niet beschikbaar (${availability.reason})`}
+            <p
+              className={`mt-1 text-sm ${
+                availability.available ? "text-green-400" : "text-red-300"
+              }`}
+            >
+              {availability.available
+                ? "Beschikbaar ✅"
+                : `Niet beschikbaar (${availability.reason})`}
             </p>
           )}
           <Button
@@ -172,7 +204,10 @@ export default function SetupWizardPage() {
           <Input
             list="companyType"
             value={form.watch("companyType")}
-            onChange={(e) => { form.setValue("companyType", e.target.value as any); autoSave({ companyType: e.target.value as any }); }}
+            onChange={(e) => {
+              form.setValue("companyType", e.target.value as any);
+              autoSave({ companyType: e.target.value as any });
+            }}
           />
           <datalist id="companyType">
             <option value="zzp" />
@@ -187,22 +222,31 @@ export default function SetupWizardPage() {
             min={1}
             max={12}
             value={form.watch("fiscalYearStartMonth")}
-            onChange={(e) => form.setValue("fiscalYearStartMonth", Number(e.target.value))}
-            onBlur={() => autoSave({ fiscalYearStartMonth: form.getValues("fiscalYearStartMonth") })}
+            onChange={(e) =>
+              form.setValue("fiscalYearStartMonth", Number(e.target.value))
+            }
+            onBlur={() =>
+              autoSave({ fiscalYearStartMonth: form.getValues("fiscalYearStartMonth") })
+            }
           />
 
           <label className="block mt-2 text-sm">Kas/Accrual</label>
           <Input
             list="accBasis"
             value={form.watch("accountingBasis")}
-            onChange={(e) => { form.setValue("accountingBasis", e.target.value as any); autoSave({ accountingBasis: e.target.value as any }); }}
+            onChange={(e) => {
+              form.setValue("accountingBasis", e.target.value as any);
+              autoSave({ accountingBasis: e.target.value as any });
+            }}
           />
           <datalist id="accBasis">
             <option value="cash" />
             <option value="accrual" />
           </datalist>
 
-          <Button className="mt-4" onClick={() => setStep(3)}>Volgende</Button>
+          <Button className="mt-4" onClick={() => setStep(3)}>
+            Volgende
+          </Button>
         </div>
       )}
 
@@ -225,14 +269,16 @@ export default function SetupWizardPage() {
             onBlur={() => autoSave({ logoUrl: form.getValues("logoUrl") })}
           />
 
-          <Button className="mt-4" onClick={() => setStep(4)}>Volgende</Button>
+          <Button className="mt-4" onClick={() => setStep(4)}>
+            Volgende
+          </Button>
         </div>
       )}
 
       {step === 4 && (
         <div>
           <h2 className="text-xl font-semibold mb-2">Stap 4: BTW-instellingen</h2>
-        <label className="block mt-2 text-sm">VAT ID</label>
+          <label className="block mt-2 text-sm">VAT ID</label>
           <Input
             value={form.watch("vatId") || ""}
             onChange={(e) => form.setValue("vatId", e.target.value)}
@@ -240,7 +286,9 @@ export default function SetupWizardPage() {
           />
 
           <p className="mt-2 text-sm opacity-80">Standaardtarieven: 21%, 9%, 0%</p>
-          <Button className="mt-4" onClick={() => setStep(5)}>Volgende</Button>
+          <Button className="mt-4" onClick={() => setStep(5)}>
+            Volgende
+          </Button>
         </div>
       )}
 
@@ -250,7 +298,9 @@ export default function SetupWizardPage() {
           <pre className="bg-white/5 border border-white/10 p-3 rounded text-xs">
             {JSON.stringify(form.getValues(), null, 2)}
           </pre>
-          <Button className="mt-4" onClick={handleFinish}>Afronden & Naar Dashboard</Button>
+          <Button className="mt-4" onClick={handleFinish}>
+            Afronden & Naar Dashboard
+          </Button>
         </div>
       )}
     </div>
