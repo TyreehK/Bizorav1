@@ -1,485 +1,341 @@
-import Link from "next/link";
-
-/**
- * Bizora — Home
- * Stijl: licht, zakelijk, modern (Jortt/MoneyMonk/eSign geïnspireerd)
- * Gebruikt: src/styles/index.css (thema/tokens)
- *
- * Secties:
- * 1) Hero
- * 2) Trust badges
- * 3) Feature grid
- * 4) Visual mockup (dashboard preview)
- * 5) Stappen: “Zo werkt Bizora”
- * 6) Benefits grid
- * 7) Testimonials
- * 8) Stats
- * 9) Pricing teaser
- * 10) FAQ teaser
- * 11) CTA band onderaan
- */
-
+// app/page.tsx
 export default function HomePage() {
   return (
     <>
-      <Hero />
+      {/* HERO */}
+      <section
+        style={{
+          padding: "72px 24px",
+          maxWidth: 1120,
+          margin: "0 auto",
+          display: "grid",
+          gap: 24,
+        }}
+        aria-labelledby="hero-title"
+      >
+        <div style={{ display: "grid", gap: 16 }}>
+          <h1
+            id="hero-title"
+            style={{
+              fontSize: 48,
+              lineHeight: "1.1",
+              margin: 0,
+              letterSpacing: -0.5,
+            }}
+          >
+            Bizora — bouw sneller. beheer slimmer.
+          </h1>
+          <p style={{ fontSize: 18, color: "#334155", margin: 0 }}>
+            Moderne web app met Supabase, Vercel & GitHub. Start met een
+            schaalbare basis: auth, data en UI klaar om te groeien.
+          </p>
+          <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+            <a
+              href="/signup"
+              style={{
+                display: "inline-block",
+                padding: "12px 16px",
+                borderRadius: 10,
+                background: "#111827",
+                color: "white",
+                textDecoration: "none",
+                fontWeight: 600,
+              }}
+            >
+              Start gratis
+            </a>
+            <a
+              href="#features"
+              style={{
+                display: "inline-block",
+                padding: "12px 16px",
+                borderRadius: 10,
+                border: "1px solid #e5e7eb",
+                textDecoration: "none",
+                color: "#111827",
+                fontWeight: 600,
+                background: "white",
+              }}
+            >
+              Bekijk features
+            </a>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: 16,
+              alignItems: "center",
+              marginTop: 16,
+              color: "#64748b",
+              fontSize: 14,
+            }}
+          >
+            <span>⚡ Supabase</span>
+            <span>•</span>
+            <span>▲ Vercel</span>
+            <span>•</span>
+            <span> GitHub</span>
+          </div>
+        </div>
 
-      <TrustBadges />
+        {/* Simple visual / placeholder */}
+        <div
+          role="img"
+          aria-label="Product preview"
+          style={{
+            marginTop: 8,
+            border: "1px solid #e5e7eb",
+            borderRadius: 16,
+            minHeight: 260,
+            background:
+              "linear-gradient(180deg, #f8fafc 0%, #ffffff 40%, #f1f5f9 100%)",
+          }}
+        />
+      </section>
 
-      <FeatureGrid />
+      {/* FEATURES */}
+      <section
+        id="features"
+        aria-labelledby="features-title"
+        style={{
+          padding: "48px 24px",
+          background: "#fafafa",
+          borderTop: "1px solid #e5e7eb",
+          borderBottom: "1px solid #e5e7eb",
+        }}
+      >
+        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+          <h2 id="features-title" style={{ fontSize: 32, margin: "0 0 16px" }}>
+            Wat maakt Bizora anders?
+          </h2>
+          <p style={{ margin: "0 0 24px", color: "#475569" }}>
+            Alles wat je nodig hebt om snel te lanceren, netjes gestructureerd.
+          </p>
 
-      <VisualMockup />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: 16,
+            }}
+          >
+            <Card
+              title="Direct klaar voor productie"
+              description="Next.js App Router, edge-ready. Perfect voor Vercel deployments."
+              icon="🚀"
+            />
+            <Card
+              title="Supabase als turbo-backend"
+              description="Auth, database en file storage zonder gedoe. Veilig en schaalbaar."
+              icon="🧩"
+            />
+            <Card
+              title="Netjes gestructureerd"
+              description="Heldere mappenstructuur en componenten. Gemakkelijk uit te breiden."
+              icon="🗂️"
+            />
+          </div>
+        </div>
+      </section>
 
-      <Steps />
+      {/* PRICING */}
+      <section
+        id="pricing"
+        aria-labelledby="pricing-title"
+        style={{ padding: "64px 24px" }}
+      >
+        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+          <h2 id="pricing-title" style={{ fontSize: 32, margin: "0 0 8px" }}>
+            Eerlijke prijzen
+          </h2>
+          <p style={{ margin: "0 0 24px", color: "#475569" }}>
+            Begin gratis. Upgrade wanneer jij klaar bent.
+          </p>
 
-      <Benefits />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: 16,
+            }}
+          >
+            <PriceCard
+              name="Starter"
+              price="Gratis"
+              features={[
+                "Basis landingspagina",
+                "Klaar voor Supabase",
+                "Deploy op Vercel",
+              ]}
+              ctaHref="/signup"
+              highlighted={false}
+            />
+            <PriceCard
+              name="Growth"
+              price="€19/m"
+              features={[
+                "Auth + profielpagina",
+                "Nieuwsbrief opslag",
+                "Eenvoudige formulieren",
+              ]}
+              ctaHref="/signup"
+              highlighted
+            />
+            <PriceCard
+              name="Business"
+              price="€49/m"
+              features={[
+                "Teams & rollen",
+                "Server actions + RLS",
+                "Custom domeinen",
+              ]}
+              ctaHref="/contact"
+              highlighted={false}
+            />
+          </div>
+        </div>
+      </section>
 
-      <Testimonials />
-
-      <Stats />
-
-      <PricingTeaser />
-
-      <FaqTeaser />
-
-      <FinalCta />
+      {/* CONTACT */}
+      <section
+        id="contact"
+        aria-labelledby="contact-title"
+        style={{
+          padding: "56px 24px",
+          background: "#f8fafc",
+          borderTop: "1px solid #e5e7eb",
+        }}
+      >
+        <div style={{ maxWidth: 800, margin: "0 auto" }}>
+          <h2 id="contact-title" style={{ fontSize: 28, margin: "0 0 12px" }}>
+            Vragen of samenwerken?
+          </h2>
+          <p style={{ margin: "0 0 20px", color: "#475569" }}>
+            Stuur een mail naar{" "}
+            <a href="mailto:hello@bizora.app">hello@bizora.app</a> of klik op
+            “Start gratis”.
+          </p>
+          <div style={{ display: "flex", gap: 12 }}>
+            <a
+              href="/signup"
+              style={{
+                display: "inline-block",
+                padding: "12px 16px",
+                borderRadius: 10,
+                background: "#111827",
+                color: "white",
+                textDecoration: "none",
+                fontWeight: 600,
+              }}
+            >
+              Start gratis
+            </a>
+            <a
+              href="mailto:hello@bizora.app"
+              style={{
+                display: "inline-block",
+                padding: "12px 16px",
+                borderRadius: 10,
+                border: "1px solid #e5e7eb",
+                textDecoration: "none",
+                color: "#111827",
+                fontWeight: 600,
+                background: "white",
+              }}
+            >
+              Mail ons
+            </a>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
 
-/* ----------------------------- 1) HERO ------------------------------ */
-
-function Hero() {
+function Card({
+  title,
+  description,
+  icon,
+}: {
+  title: string;
+  description: string;
+  icon: string;
+}) {
   return (
-    <section className="section">
-      <div className="container" style={{ display: "grid", gap: "2rem", gridTemplateColumns: "repeat(1, minmax(0, 1fr))" }}>
-        <div style={{ display: "grid", gap: "1rem" }}>
-          <span className="pill">Voor ondernemers · 30 dagen gratis</span>
-          <h1 style={{ fontSize: "clamp(36px, 5vw, 56px)", lineHeight: 1.1, fontWeight: 800, color: "var(--bz-primary)" }}>
-            Administratie, <span style={{ color: "var(--bz-secondary)" }}>eenvoudig</span> geregeld.
-          </h1>
-          <p style={{ maxWidth: 720, color: "var(--bz-text-muted)", fontSize: "1.125rem" }}>
-            Stuur professionele offertes, factureer met één klik en houd btw en betalingen bij — alles op één plek.
-            Bizora bespaart tijd en geeft je overzicht.
-          </p>
-          <div style={{ display: "flex", gap: ".75rem", flexWrap: "wrap", marginTop: ".5rem" }}>
-            <Link className="btn btn-primary" href="/register">Start gratis</Link>
-            <Link className="btn btn-outline" href="/pricing">Bekijk prijzen</Link>
-          </div>
-          <ul style={{ display: "grid", gap: ".4rem", color: "var(--bz-text-muted)", fontSize: ".95rem", marginTop: ".5rem" }}>
-            <li>• Mooie PDF’s en automatische herinneringen</li>
-            <li>• Zicht op omzet, openstaand en btw</li>
-            <li>• Klaar voor opschalen: team, projecten, artikelen</li>
-          </ul>
-        </div>
+    <article
+      style={{
+        border: "1px solid #e5e7eb",
+        borderRadius: 14,
+        padding: 16,
+        background: "white",
+      }}
+    >
+      <div style={{ fontSize: 24, marginBottom: 8 }} aria-hidden>
+        {icon}
       </div>
-    </section>
+      <h3 style={{ margin: "0 0 8px", fontSize: 20 }}>{title}</h3>
+      <p style={{ margin: 0, color: "#475569" }}>{description}</p>
+    </article>
   );
 }
 
-/* ------------------------ 2) TRUST BADGES --------------------------- */
-
-function TrustBadges() {
-  const brands = ["KPN", "ING", "KVK", "Adyen", "Exact", "AFAS"];
+function PriceCard({
+  name,
+  price,
+  features,
+  ctaHref,
+  highlighted,
+}: {
+  name: string;
+  price: string;
+  features: string[];
+  ctaHref: string;
+  highlighted?: boolean;
+}) {
   return (
-    <section>
-      <div className="container" style={{ paddingBlock: "1.5rem" }}>
-        <div
-          className="card"
+    <article
+      style={{
+        border: "1px solid #e5e7eb",
+        borderRadius: 14,
+        padding: 16,
+        background: highlighted ? "#111827" : "white",
+        color: highlighted ? "white" : "#0f172a",
+      }}
+      aria-label={`${name} plan`}
+    >
+      <header style={{ marginBottom: 8 }}>
+        <h3 style={{ margin: 0, fontSize: 20 }}>{name}</h3>
+        <p
           style={{
-            display: "grid",
-            gap: "1.25rem",
-            gridTemplateColumns: "1fr",
-            alignItems: "center",
+            margin: "4px 0 0",
+            fontWeight: 700,
+            fontSize: 18,
+            color: highlighted ? "white" : "#111827",
           }}
         >
-          <div style={{ textAlign: "center", color: "var(--bz-text-muted)", fontWeight: 600 }}>
-            Vertrouwd door ondernemers en teams
-          </div>
-          <div
-            className="no-scrollbar"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(6, minmax(120px, 1fr))",
-              gap: "1rem",
-              alignItems: "center",
-              overflowX: "auto",
-              paddingBottom: ".25rem",
-            }}
-          >
-            {brands.map((b) => (
-              <div
-                key={b}
-                className="card"
-                style={{
-                  textAlign: "center",
-                  padding: "0.9rem",
-                  borderRadius: 12,
-                }}
-              >
-                <span style={{ fontWeight: 800, color: "var(--bz-primary)" }}>{b}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ----------------------- 3) FEATURE GRID ---------------------------- */
-
-function FeatureGrid() {
-  const items = [
-    {
-      title: "Facturen & Offertes",
-      desc: "Maak en verstuur in je huisstijl. Betaallink, herinneringen en PDF in één.",
-      bullets: ["Nummering & templates", "Automatische herinneringen", "Deelbetalingen & creditnota’s"],
-    },
-    {
-      title: "BTW & Aangifte",
-      desc: "Direct inzicht in verschuldigd vs. voorbelasting. Exports klaar voor je boekhouder.",
-      bullets: ["21%/9%/0% en verlegd", "ICP & correcties", "PDF/CSV/XLSX-exports"],
-    },
-    {
-      title: "Rapportages",
-      desc: "Omzet, aging, per klant/artikel/project. Drill-down tot op de bron.",
-      bullets: ["KPI-tegels", "Trends en top-10", "Filters die overal werken"],
-    },
-    {
-      title: "Team & Projecten",
-      desc: "Samenwerken met rollen en seats. Urenregistratie en budgetbewaking.",
-      bullets: ["Admin/Manager/Medewerker", "Uren → factureren", "Seat-limieten en audit"],
-    },
-  ];
-
-  return (
-    <section className="section">
-      <div className="container" style={{ display: "grid", gap: "1.5rem" }}>
-        <header style={{ display: "grid", gap: ".35rem" }}>
-          <h2 className="section-title">Alles wat je nodig hebt</h2>
-          <p className="section-subtitle">
-            Bizora combineert offertes, facturen, btw en rapportages in één duidelijke workflow — zonder overbodige rommel.
-          </p>
-        </header>
-
-        <div
-          style={{
-            display: "grid",
-            gap: "1rem",
-            gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-          }}
-        >
-          {items.map((it) => (
-            <article key={it.title} className="card" style={{ display: "grid", gap: ".75rem" }}>
-              <h3 style={{ fontSize: "1.125rem", fontWeight: 800, color: "var(--bz-primary)" }}>
-                {it.title}
-              </h3>
-              <p style={{ color: "var(--bz-text-muted)" }}>{it.desc}</p>
-              <ul style={{ display: "grid", gap: ".35rem", color: "var(--bz-text)" }}>
-                {it.bullets.map((b) => (
-                  <li key={b}>• {b}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* -------------------- 4) VISUAL MOCKUP / PREVIEW -------------------- */
-
-function VisualMockup() {
-  return (
-    <section>
-      <div className="container" style={{ display: "grid", gap: "1rem" }}>
-        <div
-          className="card"
-          style={{
-            padding: "2rem",
-            display: "grid",
-            gap: "1.25rem",
-            gridTemplateColumns: "1fr 1fr",
-          }}
-        >
-          {/* Left: KPI preview */}
-          <div style={{ display: "grid", gap: ".9rem" }}>
-            <h3 style={{ fontWeight: 800, color: "var(--bz-primary)" }}>Dashboard preview</h3>
-            <div style={{ display: "grid", gap: ".75rem", gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
-              <KpiTile label="Omzet (maand)" value="€ 48.200" sub="+12% t.o.v. vorige maand" />
-              <KpiTile label="Openstaand" value="€ 13.450" sub="Achterstallig 31–60" />
-              <KpiTile label="BTW-saldo" value="€ 6.320" sub="Concept kwartaal" />
-            </div>
-
-            <div className="card" style={{ padding: "1rem" }}>
-              <div style={{ color: "var(--bz-text-muted)", fontSize: ".9rem" }}>Pipeline</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(12,1fr)", gap: ".5rem", marginTop: ".5rem" }}>
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      height: 44,
-                      borderRadius: 10,
-                      background: i < 5 ? "#ecf2ff" : "#f6f7fb",
-                      border: "1px solid var(--bz-border)",
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Right: invoice card */}
-          <div className="card" style={{ display: "grid", gap: ".75rem" }}>
-            <div style={{ color: "var(--bz-text-muted)", fontSize: ".9rem" }}>Factuur #INV-20431</div>
-            <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--bz-primary)" }}>€ 1.250</div>
-            <div
-              style={{
-                height: 112,
-                borderRadius: 14,
-                background: "linear-gradient(180deg,#eef3ff,transparent)",
-                border: "1px solid #e3ebff",
-              }}
-            />
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".95rem" }}>
-              <span style={{ color: "var(--bz-text-muted)" }}>Vervaldatum</span>
-              <span style={{ fontWeight: 700 }}>14 dagen</span>
-            </div>
-            <div style={{ display: "flex", gap: ".5rem", marginTop: ".25rem" }}>
-              <button className="btn btn-secondary">Versturen</button>
-              <button className="btn btn-outline">Voorbeeld PDF</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function KpiTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="card" style={{ padding: "1rem", display: "grid", gap: ".35rem" }}>
-      <div style={{ color: "var(--bz-text-muted)", fontSize: ".9rem" }}>{label}</div>
-      <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--bz-primary)" }}>{value}</div>
-      {sub && <div style={{ color: "var(--bz-text-muted)", fontSize: ".85rem" }}>{sub}</div>}
-    </div>
-  );
-}
-
-/* ------------------------- 5) STEPS (HOW IT WORKS) ------------------ */
-
-function Steps() {
-  const steps = [
-    {
-      t: "Start gratis",
-      d: "Maak je account aan en personaliseer je huisstijl.",
-    },
-    {
-      t: "Voeg klant/artikel toe",
-      d: "Slimme defaults voor btw, korting en betaalcondities.",
-    },
-    {
-      t: "Verstuur en volg",
-      d: "E-mail + host-pagina. Herinneringen en betalingen inzichtelijk.",
-    },
-  ];
-  return (
-    <section className="section">
-      <div className="container" style={{ display: "grid", gap: "1.25rem" }}>
-        <header>
-          <h2 className="section-title">Zo werkt Bizora</h2>
-          <p className="section-subtitle">Binnen 5 minuten verzend je je eerste factuur. Alles logisch georganiseerd.</p>
-        </header>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "1rem" }}>
-          {steps.map((s, i) => (
-            <div key={s.t} className="card" style={{ padding: "1.25rem", display: "grid", gap: ".4rem" }}>
-              <div style={{ fontWeight: 800, color: "var(--bz-primary)" }}>
-                {i + 1}. {s.t}
-              </div>
-              <div style={{ color: "var(--bz-text-muted)" }}>{s.d}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------ 6) BENEFITS GRID -------------------------- */
-
-function Benefits() {
-  const list = [
-    { t: "Snel & simpel", d: "Geen overbodige klikken. Alles binnen handbereik." },
-    { t: "Mooie documenten", d: "Offertes/facturen met jouw branding en nummering." },
-    { t: "Slimme herinneringen", d: "Voorkom gedoe met automatische follow-ups." },
-    { t: "Rapportages", d: "Zie direct omzet, openstaand en trends per klant." },
-    { t: "Teamrollen", d: "Admin, Manager, Medewerker, Externe of Alleen Lezen." },
-    { t: "Export & audit", d: "CSV/XLSX/PDF en volledige audit trail per record." },
-  ];
-  return (
-    <section>
-      <div className="container" style={{ display: "grid", gap: "1rem" }}>
-        <div className="card" style={{ padding: "1.25rem" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "1rem" }}>
-            {list.map((b) => (
-              <div key={b.t} className="card" style={{ padding: "1rem" }}>
-                <div style={{ fontWeight: 800, color: "var(--bz-primary)" }}>{b.t}</div>
-                <div style={{ color: "var(--bz-text-muted)" }}>{b.d}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------- 7) TESTIMONIALS -------------------------- */
-
-function Testimonials() {
-  const ts = [
-    {
-      n: "Eva (ZZP-design)",
-      q: "“Binnen een dag gewend. Mijn offertes zien er nu professioneel uit en ik krijg sneller akkoord.”",
-    },
-    {
-      n: "Daan (MKB-installatie)",
-      q: "“Openstaande posten eindelijk onder controle. Herinneringen schelen echt tijd.”",
-    },
-    {
-      n: "Saar (B2B marketing)",
-      q: "“Rapportages zijn duidelijk en export werkt top voor onze accountant.”",
-    },
-  ];
-  return (
-    <section className="section">
-      <div className="container" style={{ display: "grid", gap: "1rem" }}>
-        <header>
-          <h2 className="section-title">Ervaringen van klanten</h2>
-          <p className="section-subtitle">Eerlijk, simpel en effectief — dat is waar Bizora om draait.</p>
-        </header>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "1rem" }}>
-          {ts.map((t) => (
-            <figure key={t.n} className="card" style={{ padding: "1.25rem", display: "grid", gap: ".5rem" }}>
-              <blockquote style={{ color: "var(--bz-text)" }}>{t.q}</blockquote>
-              <figcaption style={{ color: "var(--bz-text-muted)", fontWeight: 600 }}>{t.n}</figcaption>
-            </figure>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ----------------------------- 8) STATS ----------------------------- */
-
-function Stats() {
-  const items = [
-    { v: "12.5k+", l: "Maand. facturen" },
-    { v: "9.1k+", l: "Offertes verstuurd" },
-    { v: "4.8k+", l: "Tevreden gebruikers" },
-    { v: "€28M", l: "Omzet verwerkt / jaar" },
-  ];
-  return (
-    <section>
-      <div className="container">
-        <div
-          className="card"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4,1fr)",
-            gap: "1rem",
-            padding: "1.25rem",
-          }}
-        >
-          {items.map((s) => (
-            <div key={s.l} className="card" style={{ padding: "1rem", textAlign: "center" }}>
-              <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--bz-primary)" }}>{s.v}</div>
-              <div style={{ color: "var(--bz-text-muted)" }}>{s.l}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------ 9) PRICING TEASER ------------------------- */
-
-function PricingTeaser() {
-  return (
-    <section className="section">
-      <div className="container" style={{ display: "grid", gap: ".75rem", textAlign: "center" }}>
-        <h2 className="section-title">Eerlijke prijzen voor elke fase</h2>
-        <p className="section-subtitle" style={{ marginInline: "auto" }}>
-          Start, groei of schaal met duidelijke pakketten. 30 dagen gratis proberen — geen creditcard nodig.
+          {price}
         </p>
-        <div style={{ marginTop: ".75rem" }}>
-          <Link className="btn btn-primary" href="/pricing">Bekijk pakketten</Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* -------------------------- 10) FAQ TEASER -------------------------- */
-
-function FaqTeaser() {
-  const faqs = [
-    { q: "Kan ik later upgraden?", a: "Ja, je kunt op elk moment je pakket wijzigen." },
-    { q: "Ondersteunen jullie btw-aangifte?", a: "Je krijgt per periode een duidelijk overzicht + export." },
-    { q: "Is er teamtoegang?", a: "Ja, met vaste rollen en seat-limieten." },
-  ];
-  return (
-    <section>
-      <div className="container" style={{ display: "grid", gap: "1rem" }}>
-        <div className="card" style={{ padding: "1.25rem" }}>
-          <div style={{ display: "grid", gap: ".75rem", gridTemplateColumns: "repeat(3,1fr)" }}>
-            {faqs.map((f) => (
-              <div key={f.q} className="card" style={{ padding: "1rem" }}>
-                <div style={{ fontWeight: 800, color: "var(--bz-primary)" }}>{f.q}</div>
-                <div style={{ color: "var(--bz-text-muted)" }}>{f.a}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ textAlign: "center", marginTop: "1rem" }}>
-            <Link className="btn btn-outline" href="/faq">Meer vragen</Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ----------------------------- 11) CTA ------------------------------ */
-
-function FinalCta() {
-  return (
-    <section className="section">
-      <div className="container">
-        <div
-          className="card"
-          style={{
-            padding: "2rem",
-            display: "grid",
-            gap: ".75rem",
-            alignItems: "center",
-            textAlign: "center",
-          }}
-        >
-          <h2 className="section-title">Klaar om te starten?</h2>
-          <p className="section-subtitle" style={{ marginInline: "auto" }}>
-            Probeer Bizora 30 dagen gratis. Binnen 5 minuten heb je je eerste factuur verstuurd.
-          </p>
-          <div style={{ marginTop: ".25rem" }}>
-            <Link className="btn btn-primary" href="/register">Start gratis</Link>
-          </div>
-        </div>
-      </div>
-    </section>
+      </header>
+      <ul style={{ paddingLeft: 18, margin: "12px 0", lineHeight: 1.6 }}>
+        {features.map((f) => (
+          <li key={f}>{f}</li>
+        ))}
+      </ul>
+      <a
+        href={ctaHref}
+        style={{
+          display: "inline-block",
+          padding: "10px 14px",
+          borderRadius: 10,
+          border: highlighted ? "1px solid #374151" : "1px solid #e5e7eb",
+          textDecoration: "none",
+          color: highlighted ? "white" : "#111827",
+          fontWeight: 600,
+          background: highlighted ? "#0b1220" : "white",
+        }}
+      >
+        Kies {name}
+      </a>
+    </article>
   );
 }
